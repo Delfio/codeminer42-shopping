@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { shade } from 'polished';
 
 export const Container = styled.div`
     grid-area: CI;
@@ -31,6 +32,11 @@ export const ContainerCupom = styled.section`
         font-weight: bold;
         font-family: 'Roboto', serif;
         border-radius: 5px;
+        transition: background-color 0.2s;
+
+        &:hover{
+            background-color: ${shade(0.2, '#949494')}
+        }
     }
 
     input {

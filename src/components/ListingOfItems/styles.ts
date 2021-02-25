@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { shade } from 'polished';
 
 export const ContainerItem = styled.section`
     display: flex;
@@ -49,4 +50,9 @@ export const Button = styled.button`
     align-items: center;
     justify-content: center;
     border: none;
+    transition: background-color 0.2;
+
+    &:hover {
+        background-color: ${shade(0.2, '#C4C4C4')}
+    }
 `;

@@ -1,4 +1,5 @@
 import styled from 'styled-components';
+import { shade } from 'polished';
 
 export const Container = styled.div`
     grid-area: LI;
@@ -58,7 +59,7 @@ export const ContainerBotom = styled.div`
         display: flex;
         align-items: center;
         justify-content: center;
-        background: #949494;
+        background-color: #949494;
         color: #fff;
         border: 0;
         overflow: hidden;
@@ -66,9 +67,10 @@ export const ContainerBotom = styled.div`
 
         display: flex;
         align-items: center;
-        transition: background 0.2s;
+        transition: background-color 0.2s;
 
         &:hover{
+            background-color: ${shade(0.2, '#949494')}
         }
     }
 
