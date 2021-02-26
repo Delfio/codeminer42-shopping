@@ -62,3 +62,20 @@ export const CointainerInformationsOfCart = styled.section`
         color: black;
     }
 `;
+
+export const ButtonCheckout = styled.button`
+    display: flex;
+    width: 100%;
+    min-height: 50px;
+    background-color: black;
+
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 25px;
+    strong {
+        font-family: 'Roboto', sans-serif;
+        color: white;
+        font-weight: bold;
+        font-size: 28px;
+    }
+`;

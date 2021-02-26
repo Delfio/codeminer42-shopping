@@ -6,11 +6,12 @@ import {
   Container,
   ContainerCupom,
   CointainerInformationsOfCart,
+  ButtonCheckout,
 } from './styles';
 
 const CartInformation: React.FC = () => {
   const [cuppon, setCuppon] = useState('');
-  const { myCart, addPromoteCode } = useCart();
+  const { myCart, addPromoteCode, checkout } = useCart();
   return (
     <Container>
       <ListOfItems items={myCart.items} />
@@ -48,7 +49,9 @@ const CartInformation: React.FC = () => {
           ,00
         </strong>
       </CointainerInformationsOfCart>
-
+      <ButtonCheckout onClick={checkout}>
+        <strong>Checkout</strong>
+      </ButtonCheckout>
     </Container>
   );
 };

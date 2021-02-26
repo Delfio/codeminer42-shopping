@@ -51,6 +51,7 @@ interface ICartProvider {
     incrementIntem: (item_id: string) => void;
     decrementItem: (item_id: string) => void;
     addPromoteCode: (voucherCode: string) => void;
+    checkout: () => void;
 }
 
 const ICartContext = createContext<ICartProvider>({} as ICartProvider);
@@ -145,7 +146,6 @@ const CartProvider: React.FC = ({ children }) => {
           return 0;
         }
         if (totalKilosInTheCart <= 10) {
-          console.log(totalKilosInTheCart);
           return 30;
         }
 
@@ -165,7 +165,6 @@ const CartProvider: React.FC = ({ children }) => {
       return calculedTotal();
     };
 
-    // calcular descontos
     const totalOfDiscounts = () => {
       const existsVoucher = myCart.appliedVouchers.find((voucher) => voucher.type !== 'shipping');
 
@@ -182,8 +181,6 @@ const CartProvider: React.FC = ({ children }) => {
 
       return 0;
     };
-
-    // console.log(myCart.appliedVouchers);
 
     const discounts = totalOfDiscounts();
 
@@ -333,6 +330,11 @@ const CartProvider: React.FC = ({ children }) => {
     UpdateCartInformation();
   }, [allVoucher, myCart.appliedVouchers, UpdateCartInformation]);
 
+  const checkout = useCallback(() => {
+    alert('Thank you for your purchase !! Check back often');
+    window.location.reload();
+  }, []);
+
   return (
     <ICartContext.Provider value={{
       addToCart,
@@ -340,6 +342,7 @@ const CartProvider: React.FC = ({ children }) => {
       incrementIntem,
       myCart,
       addPromoteCode,
+      checkout,
       decrementItem,
       allItemsOfApi: (allItemsOfApi as IProduct[]),
     }}
