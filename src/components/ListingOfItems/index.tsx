@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useCallback } from 'react';
+import { IITemsInCart, useCart } from '../../hooks/Cart';
 
 import {
   ContainerItem,
@@ -9,41 +10,47 @@ import {
   Button,
 } from './styles';
 
-const products = [{
-  id: 1, name: 'Banana', price: 10.0, quantity: 5,
-}, {
-  id: 2, name: 'Apple', price: 20.0, quantity: 2,
-}, {
-  id: 3, name: 'Orange', price: 30.0, quantity: 3,
-}, {
-  id: 4, name: 'Mango', price: 15.0, quantity: 3,
-}];
+type IListOfItemsInTheCarProps = {
+    items: IITemsInCart[]
+}
 
-const ListingOfItems: React.FC = () => (
-  <>
-    {products.map((item) => (
-      <ContainerItem key={item.id}>
-        <ContainerInfoItem>
-          <FakeImageItem />
-          <Item>
-            <h3>{item.name}</h3>
-            <h4>
-              {' '}
-              $
-              {item.price}
-              ,00
-            </h4>
-            <p>Total: $5</p>
-          </Item>
-        </ContainerInfoItem>
-        <ContainerButtons>
-          <Button>+</Button>
-          <p>2</p>
-          <Button>-</Button>
-        </ContainerButtons>
-      </ContainerItem>
-    ))}
-  </>
-);
+const ListingOfItems: React.FC<IListOfItemsInTheCarProps> = ({ items }) => {
+  const {
+    incrementIntem,
+    decrementItem,
+  } = useCart();
+  const formatTotal = useCallback((item: IITemsInCart) => (item.amount * item.price), []);
+  return (
+    <>
+      {items.map((item) => (
+        <ContainerItem key={item.id}>
+          <ContainerInfoItem>
+            <FakeImageItem />
+            <Item>
+              <h3>{item.name}</h3>
+              <h4>
+                {' '}
+                $
+                {item.price}
+                ,00
+              </h4>
+              <p>
+                Total: $
+                {' '}
+                {formatTotal(item)}
+                ,00
+              </p>
+            </Item>
+          </ContainerInfoItem>
+          <ContainerButtons>
+            <Button onClick={() => incrementIntem(item.id)}>+</Button>
+            <p>{item.amount}</p>
+            <Button onClick={() => decrementItem(item.id)}>-</Button>
+          </ContainerButtons>
+        </ContainerItem>
+      ))}
+    </>
+  );
+};
 
 export default ListingOfItems;

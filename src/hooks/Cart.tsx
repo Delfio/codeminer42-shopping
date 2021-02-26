@@ -1,3 +1,4 @@
+/* eslint-disable no-debugger */
 import React, {
   createContext,
   useCallback,
@@ -21,7 +22,7 @@ type IInfoOfCart = {
     discount: number;
 }
 
-type IProdutoNoCarrinho = {
+export type IITemsInCart = {
     id: string;
     name: string;
     price: number;
@@ -29,7 +30,7 @@ type IProdutoNoCarrinho = {
 }
 
 type IMyCart = {
-    items: IProdutoNoCarrinho[];
+    items: IITemsInCart[];
     infos: IInfoOfCart;
 }
 
@@ -38,6 +39,8 @@ interface ICartProvider {
     addToCart: (data: IAddToCartDTO) => void;
     myCart: IMyCart;
     allItemsOfApi: IProduct[];
+    incrementIntem: (item_id: string) => void;
+    decrementItem: (item_id: string) => void;
 }
 
 const ICartContext = createContext<ICartProvider>({} as ICartProvider);
@@ -132,11 +135,41 @@ const CartProvider: React.FC = ({ children }) => {
     }));
   }, [allItemsOfApi, myCart]);
 
+  const incrementIntem = useCallback((itemid: string) => {
+    const itemInCart = myCart.items.findIndex((item) => item.id === itemid);
+
+    if (itemInCart >= 0) {
+      const updatedItems = myCart.items;
+
+      updatedItems[itemInCart].amount += 1;
+
+      setMyCart((oldCart) => ({
+        ...oldCart,
+        items: updatedItems,
+      }));
+    }
+  }, [myCart]);
+
+  const decrementItem = useCallback((itemId: string) => {
+    const itemInCart = myCart.items.findIndex((item) => item.id === itemId);
+
+    const updatedItems = myCart.items;
+
+    updatedItems[itemInCart].amount -= 1;
+
+    setMyCart((oldCart) => ({
+      ...oldCart,
+      items: updatedItems,
+    }));
+  }, [myCart]);
+
   return (
     <ICartContext.Provider value={{
       addToCart,
       loading,
+      incrementIntem,
       myCart,
+      decrementItem,
       allItemsOfApi: (allItemsOfApi as IProduct[]),
     }}
     >

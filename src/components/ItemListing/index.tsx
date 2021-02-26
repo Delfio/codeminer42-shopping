@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 
 import {
   Container, Title, ContainerBotom,
 } from './styles';
 
 import { useCart } from '../../hooks/Cart';
+import { IProduct } from '../../dtos/IProduct';
 
 const items = {
   products: [{
@@ -25,7 +26,15 @@ const items = {
 const ItemListing: React.FC = () => {
   const {
     allItemsOfApi,
+    addToCart,
   } = useCart();
+
+  const addItemToCart = useCallback((data: IProduct) => {
+    addToCart({
+      amount: 1,
+      id: data.id,
+    });
+  }, [addToCart]);
 
   return (
     (
@@ -50,7 +59,7 @@ const ItemListing: React.FC = () => {
                 </p>
 
               </div>
-              <button type="button">
+              <button type="button" onClick={() => addItemToCart(product)}>
                 <span>
                   Add to cart
                 </span>
