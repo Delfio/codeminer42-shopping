@@ -5,7 +5,7 @@ export const Container = styled.div`
     grid-area: LI;
 
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     grid-gap: 25px;
     list-style: none;
     overflow-y: scroll;
@@ -16,6 +16,8 @@ export const Container = styled.div`
     margin: 0;
     li{
         display: flex;
+        min-height: 450px;
+        max-height: 550px;
         flex-direction: column;
         justify-content: space-between;
         border: 1px solid rgba(0,0,0,0.5);

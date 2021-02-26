@@ -4,16 +4,7 @@ import {
   Container, Title, ContainerBotom,
 } from './styles';
 
-type ProductInfo = {
-    id: number;
-    name: string;
-    price: number;
-    available: number;
-}
-
-type ItemListingProps = {
-    products: ProductInfo[]
-}
+import { useCart } from '../../hooks/Cart';
 
 const items = {
   products: [{
@@ -31,39 +22,47 @@ const items = {
   }],
 };
 
-const ItemListing: React.FC = () => (
-  <Container>
-    {items.products.map((product) => (
-      <li key={product.id}>
-        <Title>
-          <strong>{product.name}</strong>
-        </Title>
-        <ContainerBotom>
-          <div>
-            <p>
-              $
-              {' '}
-              {product.price}
-              ,00
-            </p>
-            <p>
-              Available:
-              {' '}
-              {product.available}
-            </p>
+const ItemListing: React.FC = () => {
+  const {
+    allItemsOfApi,
+  } = useCart();
 
-          </div>
-          <button type="button">
-            <span>
-              Add to cart
-            </span>
-          </button>
+  return (
+    (
+      <Container>
+        {allItemsOfApi.map((product) => (
+          <li key={product.id}>
+            <Title>
+              <strong>{product.name}</strong>
+            </Title>
+            <ContainerBotom>
+              <div>
+                <p>
+                  $
+                  {' '}
+                  {product.price}
+                  ,00
+                </p>
+                <p>
+                  Available:
+                  {' '}
+                  {product.available}
+                </p>
 
-        </ContainerBotom>
-      </li>
-    ))}
-  </Container>
+              </div>
+              <button type="button">
+                <span>
+                  Add to cart
+                </span>
+              </button>
 
-);
+            </ContainerBotom>
+          </li>
+        ))}
+      </Container>
+
+    )
+  );
+};
 
 export default ItemListing;
