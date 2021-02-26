@@ -11,7 +11,7 @@ const Layout: React.FC = () => {
     loading,
   } = useCart();
 
-  if (!loading) {
+  if (loading) {
     return (
       <div style={{
         display: 'flex',

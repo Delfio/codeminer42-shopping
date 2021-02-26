@@ -1,4 +1,3 @@
-/* eslint-disable no-debugger */
 import React, {
   createContext,
   useCallback,
@@ -23,6 +22,14 @@ type IInfoOfCart = {
     discount: number;
 }
 
+export type IVoucher = {
+    id: string;
+    code: string;
+    type: 'percentual' | 'fixed' | 'shipping',
+    amount: number,
+    minValue?: number
+}
+
 export type IITemsInCart = {
     id: string;
     name: string;
@@ -33,6 +40,7 @@ export type IITemsInCart = {
 type IMyCart = {
     items: IITemsInCart[];
     infos: IInfoOfCart;
+    appliedVouchers: IVoucher[];
 }
 
 interface ICartProvider {
@@ -42,7 +50,7 @@ interface ICartProvider {
     allItemsOfApi: IProduct[];
     incrementIntem: (item_id: string) => void;
     decrementItem: (item_id: string) => void;
-    // addPromoteCode: (promote_id: string) => void;
+    addPromoteCode: (voucherCode: string) => void;
 }
 
 const ICartContext = createContext<ICartProvider>({} as ICartProvider);
@@ -62,17 +70,50 @@ const CartProvider: React.FC = ({ children }) => {
         total: 0,
       },
       items: [],
+      appliedVouchers: [],
     };
   });
-  const [allItemsOfApi, setAllItemsOfApi] = useState<IProduct[]>();
+  const [allVoucher, setAllVoucher] = useState<IVoucher[]>(() => {
+    const vounchers = localStorage.getItem('@codeminer42-shopping-vounchers');
+
+    if (vounchers) {
+      return JSON.parse(vounchers);
+    }
+
+    return [];
+  });
+  const [allItemsOfApi, setAllItemsOfApi] = useState<IProduct[]>(() => {
+    const products = localStorage.getItem('@codeminer42-shopping-products');
+    if (products) {
+      return JSON.parse(products);
+    }
+    return [];
+  });
   const [loading, setLoading] = useState<boolean>(false);
 
   const getForAllRegisterOfProducts = useCallback(async () => {
-    const { data } = await baseURL.get('/products.json');
+    try {
+      const { data } = await baseURL.get('/products.json');
 
-    setAllItemsOfApi(data.products);
+      setAllItemsOfApi(data.products);
 
-    setLoading(true);
+      localStorage.setItem('@codeminer42-shopping-products', JSON.stringify(data.products));
+    } catch (error) {
+      console.log('error in request of products ', error);
+    }
+
+    setLoading(false);
+  }, []);
+
+  const getAllAvailableCoupons = useCallback(async () => {
+    try {
+      const { data } = await baseURL.get('/vouchers.json');
+
+      setAllVoucher(data.vouchers);
+      localStorage.setItem('@codeminer42-shopping-vounchers', JSON.stringify(data.vouchers));
+    } catch (error) {
+      console.log('erro when requesting the list of vounchers ', error);
+    }
   }, []);
 
   //   const saveCartInLocalStorage = useCallback(() => {
@@ -80,9 +121,10 @@ const CartProvider: React.FC = ({ children }) => {
   //   }, [myCart]);
 
   useEffect(() => {
-    setLoading(false);
+    setLoading(true);
+    getAllAvailableCoupons();
     getForAllRegisterOfProducts();
-  }, [getForAllRegisterOfProducts]);
+  }, [getForAllRegisterOfProducts, getAllAvailableCoupons]);
 
   const UpdateCartInformation = useCallback(() => {
     // cart weight
@@ -97,22 +139,60 @@ const CartProvider: React.FC = ({ children }) => {
 
     // calculate total freight
     const totalOfShipping = () => {
-      if (subTotalOfCart >= 400) {
-        return 0;
+      const oldFreightPrice = myCart.infos.shipping;
+      const calculedTotal = () => {
+        if (subTotalOfCart >= 400) {
+          return 0;
+        }
+        if (totalKilosInTheCart <= 10) {
+          console.log(totalKilosInTheCart);
+          return 30;
+        }
+
+        return Math.round(oldFreightPrice + (((totalKilosInTheCart - 10) / 5) * 7));
+      };
+
+      const existsVoucherAppliedForShipping = myCart.appliedVouchers.find((voucher) => voucher.type === 'shipping');
+
+      if (!existsVoucherAppliedForShipping) {
+        return calculedTotal();
       }
-      if (totalKilosInTheCart === 10) {
-        return 30;
+      if (existsVoucherAppliedForShipping) {
+        if (subTotalOfCart >= Number(existsVoucherAppliedForShipping.minValue)) {
+          return 0;
+        }
+      }
+      return calculedTotal();
+    };
+
+    // calcular descontos
+    const totalOfDiscounts = () => {
+      const existsVoucher = myCart.appliedVouchers.find((voucher) => voucher.type !== 'shipping');
+
+      if (existsVoucher) {
+        switch (existsVoucher.type) {
+          case 'fixed':
+            return existsVoucher.amount;
+          case 'percentual':
+            return (subTotalOfCart - ((existsVoucher.amount * 100) * subTotalOfCart));
+          default:
+            return 0;
+        }
       }
 
-      return Number((((totalKilosInTheCart - 5) / 10) * 7).toFixed(2));
+      return 0;
     };
+
+    // console.log(myCart.appliedVouchers);
+
+    const discounts = totalOfDiscounts();
 
     setMyCart((oldCart) => ({
       ...oldCart,
       infos: {
-        discount: 0,
+        discount: Math.round(discounts),
         subTotal: subTotalOfCart,
-        total: (subTotalOfCart - 0),
+        total: Number((subTotalOfCart - discounts).toFixed(2)),
         shipping: totalOfShipping(),
       },
     }));
@@ -120,7 +200,7 @@ const CartProvider: React.FC = ({ children }) => {
 
   useEffect(() => {
     UpdateCartInformation();
-  }, [myCart.items]);
+  }, [myCart.items, myCart.appliedVouchers]);
 
   const addToCart = useCallback((data: IAddToCartDTO) => {
     const selectedItem = allItemsOfApi?.find((item) => item.id === data.id);
@@ -157,6 +237,8 @@ const CartProvider: React.FC = ({ children }) => {
           return item;
         }),
       }));
+
+      UpdateCartInformation();
       return;
     }
 
@@ -171,7 +253,9 @@ const CartProvider: React.FC = ({ children }) => {
       ...oldCart,
       items: allItems,
     }));
-  }, [allItemsOfApi, myCart]);
+
+    UpdateCartInformation();
+  }, [allItemsOfApi, myCart, UpdateCartInformation]);
 
   const incrementIntem = useCallback((itemid: string) => {
     const itemInCart = myCart.items.findIndex((item) => item.id === itemid);
@@ -194,7 +278,9 @@ const CartProvider: React.FC = ({ children }) => {
         items: updatedItems,
       }));
     }
-  }, [myCart, allItemsOfApi]);
+
+    UpdateCartInformation();
+  }, [myCart, allItemsOfApi, UpdateCartInformation]);
 
   const decrementItem = useCallback((itemId: string) => {
     const itemInCart = myCart.items.findIndex((item) => item.id === itemId);
@@ -211,7 +297,41 @@ const CartProvider: React.FC = ({ children }) => {
       ...oldCart,
       items: updatedItems,
     }));
-  }, [myCart]);
+
+    UpdateCartInformation();
+  }, [myCart, UpdateCartInformation]);
+
+  const addPromoteCode = useCallback((voucherCode: string) => {
+    if (!voucherCode) {
+      alert('invalid vouncher!');
+      return;
+    }
+
+    const voucherExists = allVoucher.find((voucher) => voucher.code === voucherCode);
+
+    if (!voucherExists) {
+      alert('Vouncher code not found!');
+      return;
+    }
+
+    const voucherAlreadyApplied = myCart.appliedVouchers.find(
+      (voucher) => voucher.code === voucherCode,
+    );
+
+    if (voucherAlreadyApplied) {
+      alert('Voucher already applied!');
+      return;
+    }
+
+    const vounchers = myCart.appliedVouchers;
+    vounchers.push(voucherExists);
+    setMyCart((oldCart) => ({
+      ...oldCart,
+      appliedVouchers: vounchers,
+    }));
+
+    UpdateCartInformation();
+  }, [allVoucher, myCart.appliedVouchers, UpdateCartInformation]);
 
   return (
     <ICartContext.Provider value={{
@@ -219,6 +339,7 @@ const CartProvider: React.FC = ({ children }) => {
       loading,
       incrementIntem,
       myCart,
+      addPromoteCode,
       decrementItem,
       allItemsOfApi: (allItemsOfApi as IProduct[]),
     }}

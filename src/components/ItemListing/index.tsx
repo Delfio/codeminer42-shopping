@@ -36,6 +36,12 @@ const ItemListing: React.FC = () => {
     });
   }, [addToCart]);
 
+  if (!allItemsOfApi.length) {
+    return (
+      <h2>sdfasdf</h2>
+    );
+  }
+
   return (
     (
       <Container>

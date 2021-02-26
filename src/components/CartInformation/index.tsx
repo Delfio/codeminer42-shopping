@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import ListOfItems from '../ListingOfItems';
 import { useCart } from '../../hooks/Cart';
 
@@ -9,13 +9,14 @@ import {
 } from './styles';
 
 const CartInformation: React.FC = () => {
-  const { myCart } = useCart();
+  const [cuppon, setCuppon] = useState('');
+  const { myCart, addPromoteCode } = useCart();
   return (
     <Container>
       <ListOfItems items={myCart.items} />
       <ContainerCupom>
-        <input placeholder="insert your promotion code" type="text" />
-        <button type="button"> Apply </button>
+        <input onChange={(e) => setCuppon(e.target.value)} placeholder="insert your promotion code" type="text" />
+        <button type="button" onClick={() => addPromoteCode(cuppon)}> Apply </button>
       </ContainerCupom>
       <CointainerInformationsOfCart>
         <p>Subtotal</p>
@@ -28,9 +29,7 @@ const CartInformation: React.FC = () => {
       <CointainerInformationsOfCart>
         <p>Shipping</p>
         <p>
-          $
-          {myCart.infos.shipping}
-          ,00
+          {myCart.infos.shipping >= 0 ? `$${myCart.infos.shipping},00` : 'FREE'}
         </p>
       </CointainerInformationsOfCart>
       <CointainerInformationsOfCart>
