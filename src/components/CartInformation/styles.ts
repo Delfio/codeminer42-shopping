@@ -56,4 +56,9 @@ export const CointainerInformationsOfCart = styled.section`
     justify-content: space-around;
     align-items: center;
     border-top: 1px solid rgba(0,0,0,0.2);
+
+    strong {
+        font-weight: bold;
+        color: black;
+    }
 `;

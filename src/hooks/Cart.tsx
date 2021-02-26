@@ -19,6 +19,7 @@ type IAddToCartDTO = {
 type IInfoOfCart = {
     total: number;
     subTotal: number;
+    shipping: number;
     discount: number;
 }
 
@@ -41,6 +42,7 @@ interface ICartProvider {
     allItemsOfApi: IProduct[];
     incrementIntem: (item_id: string) => void;
     decrementItem: (item_id: string) => void;
+    // addPromoteCode: (promote_id: string) => void;
 }
 
 const ICartContext = createContext<ICartProvider>({} as ICartProvider);
@@ -82,7 +84,43 @@ const CartProvider: React.FC = ({ children }) => {
     getForAllRegisterOfProducts();
   }, [getForAllRegisterOfProducts]);
 
-  //   function updateData() {}
+  const UpdateCartInformation = useCallback(() => {
+    // cart weight
+    const totalKilosInTheCart = myCart.items
+      .map((item) => (item.amount))
+      .reduce((prev, curr) => (prev + curr), 0);
+
+    // calculate subtotal
+    const subTotalOfCart = myCart.items
+      .map((item) => (item.amount * item.price))
+      .reduce((prev, curr) => (prev + curr), 0);
+
+    // calculate total freight
+    const totalOfShipping = () => {
+      if (subTotalOfCart >= 400) {
+        return 0;
+      }
+      if (totalKilosInTheCart === 10) {
+        return 30;
+      }
+
+      return Number((((totalKilosInTheCart - 5) / 10) * 7).toFixed(2));
+    };
+
+    setMyCart((oldCart) => ({
+      ...oldCart,
+      infos: {
+        discount: 0,
+        subTotal: subTotalOfCart,
+        total: (subTotalOfCart - 0),
+        shipping: totalOfShipping(),
+      },
+    }));
+  }, [myCart]);
+
+  useEffect(() => {
+    UpdateCartInformation();
+  }, [myCart.items]);
 
   const addToCart = useCallback((data: IAddToCartDTO) => {
     const selectedItem = allItemsOfApi?.find((item) => item.id === data.id);
@@ -141,21 +179,33 @@ const CartProvider: React.FC = ({ children }) => {
     if (itemInCart >= 0) {
       const updatedItems = myCart.items;
 
-      updatedItems[itemInCart].amount += 1;
+      const item = updatedItems[itemInCart];
 
+      const totalUnitsOfThisItem = allItemsOfApi!.find((itemOfApi) => itemOfApi.id === item.id);
+
+      if (totalUnitsOfThisItem!.available <= updatedItems[itemInCart].amount) {
+        alert('You cannot add more units of this item!');
+        return;
+      }
+
+      updatedItems[itemInCart].amount += 1;
       setMyCart((oldCart) => ({
         ...oldCart,
         items: updatedItems,
       }));
     }
-  }, [myCart]);
+  }, [myCart, allItemsOfApi]);
 
   const decrementItem = useCallback((itemId: string) => {
     const itemInCart = myCart.items.findIndex((item) => item.id === itemId);
 
     const updatedItems = myCart.items;
 
-    updatedItems[itemInCart].amount -= 1;
+    if (updatedItems[itemInCart].amount === 1) {
+      updatedItems.splice(itemInCart, 1);
+    } else {
+      updatedItems[itemInCart].amount -= 1;
+    }
 
     setMyCart((oldCart) => ({
       ...oldCart,

@@ -19,19 +19,35 @@ const CartInformation: React.FC = () => {
       </ContainerCupom>
       <CointainerInformationsOfCart>
         <p>Subtotal</p>
-        <p>50</p>
+        <p>
+          $
+          {myCart.infos.subTotal}
+          ,00
+        </p>
       </CointainerInformationsOfCart>
       <CointainerInformationsOfCart>
-        <p>Subtotal</p>
-        <p>50</p>
+        <p>Shipping</p>
+        <p>
+          $
+          {myCart.infos.shipping}
+          ,00
+        </p>
       </CointainerInformationsOfCart>
       <CointainerInformationsOfCart>
-        <p>Subtotal</p>
-        <p>50</p>
+        <p>Discount</p>
+        <p>
+          $
+          {myCart.infos.discount}
+          ,00
+        </p>
       </CointainerInformationsOfCart>
       <CointainerInformationsOfCart>
-        <p>Subtotal</p>
-        <p>50</p>
+        <strong>Total</strong>
+        <strong>
+          $
+          {myCart.infos.total}
+          ,00
+        </strong>
       </CointainerInformationsOfCart>
 
     </Container>
