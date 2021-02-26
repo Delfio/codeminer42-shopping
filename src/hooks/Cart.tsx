@@ -1,4 +1,3 @@
-/* eslint-disable no-restricted-syntax */
 import React, {
   createContext,
   useCallback,
@@ -44,13 +43,21 @@ interface ICartProvider {
 const ICartContext = createContext<ICartProvider>({} as ICartProvider);
 
 const CartProvider: React.FC = ({ children }) => {
+  const keyLocalStorage = '@codeminer42-shopping-cart';
   const [myCart, setMyCart] = useState<IMyCart>(() => {
-    const cart = localStorage.getItem('@codeminer42-shopping-cart');
+    const cart = localStorage.getItem(keyLocalStorage);
     if (cart) {
       return JSON.parse(cart);
     }
 
-    return {} as IMyCart;
+    return {
+      infos: {
+        discount: 0,
+        subTotal: 0,
+        total: 0,
+      },
+      items: [],
+    };
   });
   const [allItemsOfApi, setAllItemsOfApi] = useState<IProduct[]>();
   const [loading, setLoading] = useState<boolean>(false);
@@ -63,6 +70,10 @@ const CartProvider: React.FC = ({ children }) => {
     setLoading(true);
   }, []);
 
+  //   const saveCartInLocalStorage = useCallback(() => {
+  //     localStorage.setItem(keyLocalStorage, JSON.stringify(myCart));
+  //   }, [myCart]);
+
   useEffect(() => {
     setLoading(false);
     getForAllRegisterOfProducts();
@@ -71,49 +82,55 @@ const CartProvider: React.FC = ({ children }) => {
   //   function updateData() {}
 
   const addToCart = useCallback((data: IAddToCartDTO) => {
-    const selectedItem = allItemsOfApi?.filter((item) => item.id === data.id);
+    const selectedItem = allItemsOfApi?.find((item) => item.id === data.id);
 
     if (!selectedItem) {
       return;
     }
-    const newItemList: IProdutoNoCarrinho[] = [];
 
-    // incrementando os items novos e adiconando os que não existem
-    for (const item of selectedItem) {
-      if (!item) break;
+    if (myCart.items.length <= 0) {
+      const newCart = ({
+        ...myCart,
+        items: [{
+          ...selectedItem,
+          amount: 1,
+        }],
+      });
+      setMyCart(newCart);
 
-      const itemIsAlreadyInCart = myCart.items.find(
-        (itemAA) => itemAA.id === item.id,
-      );
-
-      if (itemIsAlreadyInCart) {
-        newItemList.push({
-          ...itemIsAlreadyInCart,
-          amount: (itemIsAlreadyInCart.amount + data.amount),
-        });
-      } else {
-        newItemList.push({
-          ...item,
-          amount: data.amount,
-        });
-      }
+      return;
     }
 
-    const novosItems = myCart.items.map((itemOfCart) => {
-      const itemSubstituido = newItemList.find((item) => item.id === itemOfCart.id);
+    const itemExists = myCart.items.find((item) => item.id === data.id);
 
-      if (itemSubstituido) {
-        return itemSubstituido;
-      }
+    if (itemExists) {
+      setMyCart((oldCart) => ({
+        ...oldCart,
+        items: oldCart.items.map((item) => {
+          if (item.id === data.id) {
+            return {
+              ...item,
+              amount: item.amount + 1,
+            };
+          }
+          return item;
+        }),
+      }));
+      return;
+    }
 
-      return itemOfCart;
+    const allItems = myCart.items;
+
+    allItems.push({
+      ...selectedItem,
+      amount: 1,
     });
 
     setMyCart((oldCart) => ({
       ...oldCart,
-      items: novosItems,
+      items: allItems,
     }));
-  }, [allItemsOfApi, myCart.items]);
+  }, [allItemsOfApi, myCart]);
 
   return (
     <ICartContext.Provider value={{
@@ -132,7 +149,7 @@ function useCart(): ICartProvider {
   const context = useContext(ICartContext);
 
   if (!context) {
-    throw new Error('asdfsd');
+    throw new Error('Incorrect implementation');
   }
 
   return context;
